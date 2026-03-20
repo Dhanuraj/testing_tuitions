@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Setup Guide — Tuition Quiz</title>
+<style>
+:root{--bg:#0f0e1a;--card:#1a1830;--card2:#231f3a;--a1:#7c5cfc;--a2:#f7c948;--a3:#3ddcb0;--a4:#ff6b8a;--txt:#f0eeff;--mut:#8880aa;--brd:rgba(124,92,252,0.25);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);padding:24px;max-width:720px;margin:0 auto;}
+h1{font-size:1.6rem;color:var(--a1);margin-bottom:6px;}
+.sub{color:var(--mut);font-size:0.88rem;margin-bottom:28px;}
+.step{background:var(--card);border:1.5px solid var(--brd);border-radius:14px;padding:20px;margin-bottom:16px;position:relative;}
+.step-num{position:absolute;top:-12px;left:20px;background:var(--a1);color:#fff;font-weight:800;font-size:0.78rem;padding:3px 12px;border-radius:99px;}
+.step h3{font-size:1rem;font-weight:700;color:var(--a2);margin-bottom:10px;margin-top:8px;}
+.step p{color:var(--mut);font-size:0.86rem;line-height:1.6;margin-bottom:8px;}
+.step p strong{color:var(--txt);}
+.code-box{background:#0d0c1a;border:1px solid var(--brd);border-radius:8px;padding:12px 14px;font-family:'Courier New',monospace;font-size:0.82rem;color:var(--a3);margin:8px 0;word-break:break-all;position:relative;}
+.copy-btn{position:absolute;top:8px;right:8px;background:var(--a1);border:none;color:#fff;font-size:0.7rem;font-weight:700;padding:3px 8px;border-radius:6px;cursor:pointer;}
+.img-hint{background:rgba(124,92,252,0.08);border:1.5px dashed rgba(124,92,252,0.3);border-radius:8px;padding:10px 14px;font-size:0.82rem;color:var(--a1);margin:8px 0;}
+.warn{background:rgba(247,201,72,0.08);border:1.5px solid rgba(247,201,72,0.3);border-radius:8px;padding:10px 14px;font-size:0.82rem;color:var(--a2);margin:8px 0;}
+.done-box{background:rgba(61,220,176,0.08);border:1.5px solid rgba(61,220,176,0.3);border-radius:12px;padding:16px 20px;margin-top:8px;}
+.done-box h3{color:var(--a3);font-size:1rem;margin-bottom:8px;}
+.done-box p{color:var(--mut);font-size:0.84rem;line-height:1.6;}
+.done-box strong{color:var(--txt);}
+.url-input{width:100%;background:#0d0c1a;border:1.5px solid var(--brd);border-radius:8px;padding:10px 14px;color:var(--a3);font-family:'Courier New',monospace;font-size:0.84rem;outline:none;margin-top:6px;}
+.url-input:focus{border-color:var(--a1);}
+.gen-btn{background:linear-gradient(135deg,var(--a1),#a07aff);border:none;border-radius:8px;padding:10px 20px;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;margin-top:8px;width:100%;}
+#result-box{display:none;margin-top:12px;}
+</style>
+</head>
+<body>
+<h1>🐙 GitHub Setup Guide</h1>
+<p class="sub">Connect your Tuition Quiz to GitHub — questions update on all devices instantly</p>
+
+<div class="step">
+  <div class="step-num">STEP 1</div>
+  <h3>Create a free GitHub account</h3>
+  <p>Go to <strong>github.com</strong> and sign up for free. Takes 2 minutes.</p>
+  <div class="img-hint">📌 If you already have a GitHub account, skip to Step 2.</div>
+</div>
+
+<div class="step">
+  <div class="step-num">STEP 2</div>
+  <h3>Create a new repository</h3>
+  <p>After logging in:</p>
+  <p>1. Click the <strong>+</strong> button (top right) → <strong>New repository</strong></p>
+  <p>2. Name it: <strong>tuition-quiz-questions</strong></p>
+  <p>3. Set it to <strong>Public</strong> ✅ (important — quiz needs to read it)</p>
+  <p>4. Check <strong>"Add a README file"</strong></p>
+  <p>5. Click <strong>Create repository</strong></p>
+</div>
+
+<div class="step">
+  <div class="step-num">STEP 3</div>
+  <h3>Upload questions.json</h3>
+  <p>1. In your new repository, click <strong>Add file</strong> → <strong>Upload files</strong></p>
+  <p>2. Drag and drop the <strong>questions.json</strong> file (download it below)</p>
+  <p>3. Scroll down, click <strong>Commit changes</strong></p>
+  <div class="warn">⚠️ The file must be named exactly: <strong>questions.json</strong></div>
+</div>
+
+<div class="step">
+  <div class="step-num">STEP 4</div>
+  <h3>Get your raw file URL</h3>
+  <p>1. Click on <strong>questions.json</strong> in your repo</p>
+  <p>2. Click the <strong>Raw</strong> button</p>
+  <p>3. Copy the URL from your browser — it will look like:</p>
+  <div class="code-box" id="sample-url">https://raw.githubusercontent.com/YOUR-USERNAME/tuition-quiz-questions/main/questions.json<button class="copy-btn" onclick="copyText('sample-url')">Copy</button></div>
+</div>
+
+<div class="step">
+  <div class="step-num">STEP 5</div>
+  <h3>Paste your URL here to generate your quiz files</h3>
+  <p>Paste the raw URL from Step 4:</p>
+  <input class="url-input" id="github-url" placeholder="https://raw.githubusercontent.com/..." oninput="validateUrl()">
+  <button class="gen-btn" id="gen-btn" onclick="generateConfig()" disabled>⚡ Generate My Quiz Config</button>
+  <div id="result-box">
+    <div class="done-box">
+      <h3>✅ Done! Copy this into your quiz files</h3>
+      <p>Open <strong>index.html</strong>, <strong>grammar.html</strong>, and <strong>reasoning.html</strong> in a text editor.</p>
+      <p>Find the line: <code style="color:var(--a3);">const GITHUB_QUESTIONS_URL = '';</code></p>
+      <p>Replace it with:</p>
+      <div class="code-box" id="config-line" style="margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">STEP 6</div>
+  <h3>How to add new questions later</h3>
+  <p>Option A — <strong>Admin Panel:</strong> Open admin.html → Add question → Click <strong>"Save to GitHub"</strong></p>
+  <p>Option B — <strong>Direct edit:</strong> Go to GitHub → click questions.json → click pencil ✏️ → edit → Commit</p>
+  <p>Option C — <strong>Ask me:</strong> Tell me what questions you want and I'll update the file</p>
+  <div class="img-hint">🔄 Quiz fetches fresh questions every time it opens. No re-download needed.</div>
+</div>
+
+<script>
+function copyText(id) {
+  const el = document.getElementById(id);
+  const text = el.textContent.replace('Copy','').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+function validateUrl() {
+  const url = document.getElementById('github-url').value.trim();
+  const valid = url.startsWith('https://raw.githubusercontent.com/') && url.endsWith('.json');
+  document.getElementById('gen-btn').disabled = !valid;
+  if (!valid && url.length > 10) {
+    document.getElementById('gen-btn').textContent = '⚠️ URL must start with raw.githubusercontent.com and end with .json';
+  } else {
+    document.getElementById('gen-btn').textContent = '⚡ Generate My Quiz Config';
+  }
+}
+function generateConfig() {
+  const url = document.getElementById('github-url').value.trim();
+  const line = `const GITHUB_QUESTIONS_URL = '${url}';`;
+  document.getElementById('config-line').innerHTML = line + '<button class="copy-btn" onclick="copyText(\'config-line\')">Copy</button>';
+  document.getElementById('result-box').style.display = 'block';
+  document.getElementById('result-box').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>

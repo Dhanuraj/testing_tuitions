@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tuition Quiz — Admin Panel</title>
+<!-- Load .js question files so GK_QUESTIONS etc. are available -->
+<script src="questions_gk.js"></script>
+<script src="questions_grammar.js"></script>
+<script src="questions_reasoning.js"></script>
+<script src="questions_math.js"></script>
+<style>
+:root{--bg:#0f0e1a;--sur:#1a1830;--card:#231f3a;--card2:#2a2545;
+  --a1:#7c5cfc;--a2:#f7c948;--a3:#3ddcb0;--a4:#ff6b8a;
+  --txt:#f0eeff;--mut:#8880aa;--ok:#3ddcb0;--err:#ff6b8a;
+  --brd:rgba(124,92,252,0.25);--r:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;}
+
+/* LOGIN */
+#login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--card);border:1.5px solid var(--a1);border-radius:var(--r);
+  padding:40px 32px;width:100%;max-width:380px;text-align:center;}
+.login-box h1{font-size:1.7rem;color:var(--a1);margin-bottom:4px;}
+.login-box p{color:var(--mut);font-size:0.82rem;margin-bottom:22px;}
+.pw-in{width:100%;background:var(--sur);border:1.5px solid var(--brd);border-radius:10px;
+  padding:12px 16px;color:var(--txt);font-size:1rem;outline:none;margin-bottom:10px;}
+.pw-in:focus{border-color:var(--a1);}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--a1),#a07aff);border:none;
+  border-radius:10px;padding:13px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;}
+.login-err{color:var(--err);font-size:0.8rem;margin-top:6px;display:none;}
+
+/* SHELL */
+#shell{display:none;}
+.topbar{background:var(--card);border-bottom:1.5px solid var(--brd);padding:10px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:100;}
+.topbar-logo{font-size:1.1rem;font-weight:800;color:var(--a1);}
+.topbar-right{display:flex;gap:6px;flex-wrap:wrap;}
+.btn{border:none;border-radius:8px;padding:7px 13px;font-size:0.8rem;font-weight:700;
+  cursor:pointer;transition:opacity 0.15s;}
+.btn:hover{opacity:0.85;}
+.btn-p{background:linear-gradient(135deg,var(--a1),#a07aff);color:#fff;}
+.btn-g{background:linear-gradient(135deg,var(--a3),#1fb89a);color:#0f0e1a;}
+.btn-y{background:linear-gradient(135deg,var(--a2),#e6b830);color:#0f0e1a;}
+.btn-r{background:rgba(255,107,138,0.18);color:var(--err);border:1.5px solid rgba(255,107,138,0.3);}
+.btn-ghost{background:var(--sur);color:var(--mut);border:1.5px solid var(--brd);}
+.btn-sm{padding:4px 9px;font-size:0.73rem;}
+
+/* TABS */
+.tabs{display:flex;gap:3px;padding:10px 20px 0;background:var(--sur);
+  border-bottom:1.5px solid var(--brd);}
+.tab{padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:0.82rem;
+  font-weight:700;color:var(--mut);border:1.5px solid transparent;border-bottom:none;}
+.tab.active{background:var(--card);color:var(--a1);border-color:var(--brd);}
+
+.pane{padding:18px 20px;max-width:1100px;margin:0 auto;display:none;}
+.pane.active{display:block;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px;}
+.stat-box{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--r);
+  padding:12px 14px;text-align:center;}
+.stat-box .val{font-size:1.7rem;font-weight:800;}
+.stat-box .lbl{font-size:0.68rem;color:var(--mut);font-weight:700;text-transform:uppercase;
+  letter-spacing:0.06em;margin-top:2px;}
+
+/* SYNC NOTICE */
+.sync-notice{background:rgba(61,220,176,0.08);border:1.5px solid rgba(61,220,176,0.3);
+  border-radius:10px;padding:10px 14px;font-size:0.82rem;color:var(--a3);font-weight:700;
+  margin-bottom:14px;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.sync-notice strong{color:var(--txt);}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+.search-in{flex:1;min-width:180px;background:var(--sur);border:1.5px solid var(--brd);
+  border-radius:10px;padding:8px 13px;color:var(--txt);font-size:0.86rem;outline:none;}
+.search-in:focus{border-color:var(--a1);}
+.fil{background:var(--sur);border:1.5px solid var(--brd);border-radius:10px;
+  padding:8px 11px;color:var(--txt);font-size:0.8rem;outline:none;cursor:pointer;}
+.view-count{color:var(--mut);font-size:0.76rem;font-weight:700;}
+
+/* QUESTION LIST */
+.q-list{display:flex;flex-direction:column;gap:8px;}
+.q-item{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--r);overflow:hidden;}
+.q-item.local-q{border-color:rgba(61,220,176,0.5);background:rgba(61,220,176,0.03);}
+.q-item.no-img{border-color:rgba(255,107,138,0.4);}
+
+.q-head{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;user-select:none;}
+.q-head:hover{background:rgba(124,92,252,0.05);}
+.q-num{font-size:0.66rem;font-weight:800;color:var(--mut);min-width:30px;}
+.q-txt{flex:1;font-size:0.88rem;font-weight:700;line-height:1.35;}
+.q-tags{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;}
+.tag{font-size:0.6rem;font-weight:800;padding:2px 6px;border-radius:99px;
+  letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;}
+.tag-bank{background:rgba(124,92,252,0.15);color:var(--a1);border:1px solid rgba(124,92,252,0.3);}
+.tag-topic{background:rgba(247,201,72,0.12);color:var(--a2);border:1px solid rgba(247,201,72,0.25);}
+.tag-lvl{background:rgba(61,220,176,0.12);color:var(--a3);border:1px solid rgba(61,220,176,0.25);}
+/* QUIZ STATUS BADGE — most important */
+.tag-inquiz{background:rgba(61,220,176,0.18);color:#1de9b6;border:1.5px solid rgba(61,220,176,0.5);font-size:0.65rem;font-weight:900;}
+.tag-local{background:rgba(247,201,72,0.18);color:var(--a2);border:1.5px solid rgba(247,201,72,0.5);font-size:0.65rem;font-weight:900;}
+.tag-noimg{background:rgba(255,107,138,0.15);color:var(--err);border:1px solid rgba(255,107,138,0.3);}
+
+.q-acts{display:flex;gap:5px;flex-shrink:0;}
+.q-body{padding:12px;border-top:1.5px solid var(--brd);display:none;}
+.q-body.open{display:block;}
+
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0;}
+.opt-row{background:var(--sur);border:1.5px solid var(--brd);border-radius:9px;
+  padding:9px 11px;font-size:0.82rem;display:flex;align-items:center;gap:7px;}
+.opt-row.correct{border-color:var(--ok);background:rgba(61,220,176,0.07);color:var(--ok);}
+.opt-ltr{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:0.7rem;background:rgba(124,92,252,0.15);color:var(--a1);flex-shrink:0;}
+.exp-box{background:rgba(61,220,176,0.06);border:1.5px solid rgba(61,220,176,0.18);
+  border-radius:9px;padding:9px 12px;margin-top:8px;font-size:0.82rem;line-height:1.5;}
+
+/* quiz-sync status box inside q-body */
+.quiz-status-box{margin-top:10px;padding:10px 12px;border-radius:9px;font-size:0.8rem;font-weight:700;line-height:1.5;}
+.quiz-status-box.in-quiz{background:rgba(61,220,176,0.1);border:1.5px solid rgba(61,220,176,0.35);color:var(--a3);}
+.quiz-status-box.local-only{background:rgba(247,201,72,0.1);border:1.5px solid rgba(247,201,72,0.4);color:var(--a2);}
+
+/* FORM */
+.form-card{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--r);padding:20px;}
+.form-title{font-size:1rem;font-weight:800;color:var(--a1);margin-bottom:16px;}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.fg.half{flex:1;min-width:0;}
+.fg-row{display:flex;gap:12px;flex-wrap:wrap;}
+label{font-size:0.7rem;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:0.07em;}
+input[type=text],input[type=number],textarea,select{
+  background:var(--sur);border:1.5px solid var(--brd);border-radius:8px;
+  padding:8px 11px;color:var(--txt);font-size:0.86rem;outline:none;width:100%;font-family:inherit;}
+input:focus,textarea:focus,select:focus{border-color:var(--a1);}
+textarea{resize:vertical;min-height:60px;}
+.opts-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+@media(max-width:550px){.opts-form{grid-template-columns:1fr;}}
+.opt-f-row{display:flex;gap:6px;align-items:center;}
+.opt-f-tag{font-size:0.7rem;font-weight:800;color:var(--a1);min-width:16px;}
+.opt-f-row input{flex:1;}
+.correct-radio{display:flex;align-items:center;gap:4px;cursor:pointer;
+  font-size:0.74rem;color:var(--mut);font-weight:700;white-space:nowrap;}
+.correct-radio input{accent-color:var(--a3);width:14px;height:14px;}
+.lvl-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.lvl-btn{padding:5px 11px;border-radius:8px;cursor:pointer;font-size:0.76rem;font-weight:800;
+  border:1.5px solid var(--brd);background:var(--sur);color:var(--mut);transition:all 0.15s;}
+.lvl-btn.active{border-color:var(--a3);background:rgba(61,220,176,0.13);color:var(--a3);}
+.form-acts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.warn-box{background:rgba(255,107,138,0.1);border:1.5px solid rgba(255,107,138,0.3);
+  border-radius:9px;padding:7px 12px;color:var(--err);font-size:0.78rem;font-weight:700;
+  margin-bottom:12px;display:none;}
+
+/* img upload */
+.img-area{border:2px dashed var(--brd);border-radius:10px;padding:12px;text-align:center;
+  cursor:pointer;transition:border-color 0.2s;background:var(--sur);}
+.img-area:hover{border-color:var(--a1);}
+.img-area input[type=file]{display:none;}
+.img-lbl{color:var(--mut);font-size:0.78rem;font-weight:700;}
+.img-lbl span{color:var(--a1);}
+.img-prev{max-width:100%;max-height:120px;border-radius:8px;margin-top:8px;display:none;}
+.img-clear{display:none;margin-top:6px;background:rgba(255,107,138,0.13);color:var(--err);
+  border:1px solid rgba(255,107,138,0.3);border-radius:7px;padding:3px 9px;
+  font-size:0.72rem;font-weight:700;cursor:pointer;}
+
+/* STATS TAB */
+.stats-section{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--r);
+  padding:18px;margin-bottom:14px;}
+.stats-section h3{font-size:0.95rem;font-weight:800;color:var(--a1);margin-bottom:12px;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.bar-lbl{font-size:0.7rem;color:var(--mut);min-width:90px;font-weight:700;}
+.bar-track{flex:1;background:var(--sur);border-radius:99px;height:9px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;background:var(--a1);}
+.bar-val{font-size:0.72rem;font-weight:800;min-width:28px;text-align:right;}
+
+/* pagination */
+.pgn{display:flex;gap:5px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+.pgn-btn{padding:4px 11px;border-radius:7px;cursor:pointer;font-size:0.76rem;font-weight:800;
+  border:1.5px solid var(--brd);background:var(--sur);color:var(--mut);}
+.pgn-btn.active{border-color:var(--a1);color:var(--a1);background:rgba(124,92,252,0.1);}
+
+.empty-msg{text-align:center;padding:40px 20px;color:var(--mut);}
+
+/* toast */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--card2);border:1.5px solid var(--a3);border-radius:99px;
+  padding:8px 18px;color:var(--txt);font-size:0.85rem;font-weight:700;z-index:9999;
+  opacity:0;transition:all 0.3s;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <h1>🛠️ Admin Panel</h1>
+    <p>Tuition Quiz · Question Manager</p>
+    <input class="pw-in" type="password" id="pw" placeholder="Enter password"
+           onkeydown="if(event.key==='Enter')tryLogin()">
+    <button class="login-btn" onclick="tryLogin()">Unlock →</button>
+    <div class="login-err" id="login-err">❌ Wrong password</div>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div id="shell">
+  <div class="topbar">
+    <div class="topbar-logo">🛠️ Tuition Quiz — Admin</div>
+    <div class="topbar-right">
+      <button class="btn btn-p btn-sm" onclick="saveToGitHub()" id="gh-save-btn" title="Save all questions to your GitHub repository">
+        🐙 Save to GitHub
+      </button>
+      <button class="btn btn-g btn-sm" onclick="exportJSON()">⬇️ Export JSON</button>
+      <button class="btn btn-y btn-sm" onclick="document.getElementById('imp-file').click()">⬆️ Import</button>
+      <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importJSON(this)">
+      <a href="index.html" class="btn btn-ghost btn-sm" target="_blank">🏠 Open Quiz</a>
+      <button class="btn btn-r btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-browse" onclick="switchTab('browse')">📋 Browse Questions</div>
+    <div class="tab" id="tab-add"    onclick="switchTab('add')">➕ Add Question</div>
+    <div class="tab" id="tab-stats"  onclick="switchTab('stats')">📊 Stats</div>
+    <div class="tab" id="tab-github" onclick="switchTab('github')">🐙 GitHub</div>
+  </div>
+
+  <!-- ══ BROWSE ══ -->
+  <div class="pane active" id="pane-browse">
+    <!-- Stats bar -->
+    <div class="stats-grid" id="mini-stats"></div>
+
+    <!-- How it works notice -->
+    <div class="sync-notice">
+      <span style="font-size:1.2rem;flex-shrink:0;">ℹ️</span>
+      <div>
+        <strong>✅ Same device:</strong> Questions you add appear in the quiz automatically — no steps needed.<br>
+        <strong>📦 Other devices:</strong> Click <strong style="color:var(--a1);">Download Updated Files</strong> above → it downloads all HTML files with your questions baked in → copy those files to the other device.<br>
+        <span style="color:#1de9b6;">✅ In Quiz</span> = original &nbsp;|&nbsp; <span style="color:var(--a2);">⚡ Added by you</span> = your questions
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input class="search-in" id="search" placeholder="🔍 Search questions, answers, topics..." oninput="renderList()">
+      <select class="fil" id="fil-bank" onchange="renderList()">
+        <option value="all">All Banks</option>
+        <option value="gk">GK (194)</option>
+        <option value="grammar">Grammar (71)</option>
+        <option value="reasoning">Reasoning (81)</option>
+        <option value="math">Math (650)</option>
+      </select>
+      <select class="fil" id="fil-level" onchange="renderList()">
+        <option value="all">All Levels</option>
+        <option value="1">L1 Easy 🟢</option>
+        <option value="2">L2 Normal 🟡</option>
+        <option value="3">L3 Hard 🟠</option>
+        <option value="4">L4 Difficult 🔴</option>
+        <option value="5">L5 Master 🔥</option>
+      </select>
+      <select class="fil" id="fil-src" onchange="renderList()">
+        <option value="all">All Sources</option>
+        <option value="original">✅ Original (in quiz)</option>
+        <option value="local">⚡ Added by me</option>
+      </select>
+      <span class="view-count" id="view-count"></span>
+    </div>
+    <div id="q-list" class="q-list"></div>
+    <div class="pgn" id="pgn"></div>
+  </div>
+
+  <!-- ══ ADD ══ -->
+  <div class="pane" id="pane-add">
+    <div class="form-card">
+      <div class="form-title" id="form-title">➕ Add New Question</div>
+      <input type="hidden" id="edit-id">
+      <input type="hidden" id="edit-bank">
+      <input type="hidden" id="f-level-val" value="1">
+      <input type="hidden" id="f-img-data">
+
+      <div class="fg-row">
+        <div class="fg half">
+          <label>Bank / Section</label>
+          <select id="f-bank">
+            <option value="gk">GK</option>
+            <option value="grammar">Grammar</option>
+            <option value="reasoning">Reasoning</option>
+            <option value="math">Math</option>
+          </select>
+        </div>
+        <div class="fg half">
+          <label>Topic</label>
+          <input type="text" id="f-topic" placeholder="e.g. National Symbols">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Question</label>
+        <textarea id="f-q" rows="3" placeholder="Type the full question here..."></textarea>
+      </div>
+
+      <div class="fg">
+        <label>Options — fill all 4, mark ✅ the correct one</label>
+        <div class="opts-form">
+          <div class="opt-f-row">
+            <span class="opt-f-tag">A</span>
+            <input type="text" id="f-o0" placeholder="Option A">
+            <label class="correct-radio"><input type="radio" name="cor" value="0"> ✅</label>
+          </div>
+          <div class="opt-f-row">
+            <span class="opt-f-tag">B</span>
+            <input type="text" id="f-o1" placeholder="Option B">
+            <label class="correct-radio"><input type="radio" name="cor" value="1"> ✅</label>
+          </div>
+          <div class="opt-f-row">
+            <span class="opt-f-tag">C</span>
+            <input type="text" id="f-o2" placeholder="Option C">
+            <label class="correct-radio"><input type="radio" name="cor" value="2"> ✅</label>
+          </div>
+          <div class="opt-f-row">
+            <span class="opt-f-tag">D</span>
+            <input type="text" id="f-o3" placeholder="Option D">
+            <label class="correct-radio"><input type="radio" name="cor" value="3"> ✅</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Explanation (shown after answering)</label>
+        <textarea id="f-exp" rows="3" placeholder="Explain why the answer is correct..."></textarea>
+      </div>
+
+      <!-- Image section -->
+      <div class="fg-row" style="gap:14px;margin-top:4px;">
+        <div class="fg half">
+          <label>Answer Emoji (shown in explanation)</label>
+          <input type="text" id="f-emoji" placeholder="🐯 🚀 🏛️ — type emoji">
+          <div id="f-emoji-prev" style="font-size:2.8rem;text-align:center;min-height:44px;margin-top:4px;"></div>
+        </div>
+        <div class="fg half">
+          <label>OR Upload Photo / Paste URL</label>
+          <div class="img-area" onclick="document.getElementById('f-img-file').click()">
+            <input type="file" id="f-img-file" accept="image/*" onchange="handleImgUpload(this)">
+            <div class="img-lbl">📂 Click to <span>upload photo</span></div>
+            <img id="f-img-prev" class="img-prev">
+            <button class="img-clear" id="f-img-clear" onclick="event.stopPropagation();clearImg()">✕ Remove</button>
+          </div>
+          <input type="text" id="f-img-url" placeholder="or paste image URL" style="margin-top:6px;"
+                 oninput="handleImgUrl(this.value)">
+        </div>
+      </div>
+
+      <div class="fg-row">
+        <div class="fg half">
+          <label>Hint (optional)</label>
+          <input type="text" id="f-hint" placeholder="Short hint...">
+        </div>
+        <div class="fg half">
+          <label>Silent Letter Info (Grammar) / Trick (Reasoning)</label>
+          <input type="text" id="f-extra" placeholder="Extra info...">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Difficulty Level</label>
+        <div class="lvl-btns">
+          <div class="lvl-btn active" id="lb1" onclick="setLvl(1)">1 Easy 🟢</div>
+          <div class="lvl-btn" id="lb2" onclick="setLvl(2)">2 Normal 🟡</div>
+          <div class="lvl-btn" id="lb3" onclick="setLvl(3)">3 Hard 🟠</div>
+          <div class="lvl-btn" id="lb4" onclick="setLvl(4)">4 Difficult 🔴</div>
+          <div class="lvl-btn" id="lb5" onclick="setLvl(5)">5 Master 🔥</div>
+        </div>
+      </div>
+
+      <div class="warn-box" id="form-warn"></div>
+      <div class="form-acts">
+        <button class="btn btn-p" onclick="saveQ()">💾 Save Question</button>
+        <button class="btn btn-ghost" onclick="clearForm()">🗑️ Clear</button>
+        <button class="btn btn-ghost" id="cancel-btn" style="display:none;" onclick="cancelEdit()">✖ Cancel Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GITHUB CONFIG ══ -->
+  <div class="pane" id="pane-github">
+    <div class="form-card" style="margin-bottom:16px;">
+      <div class="form-title">🐙 GitHub Configuration</div>
+      <p style="color:var(--mut);font-size:0.84rem;margin-bottom:14px;line-height:1.6;">
+        Store your questions on GitHub so they load on <strong style="color:var(--txt);">any device, anywhere</strong>.<br>
+        Follow the setup guide first, then paste your raw GitHub URL below.
+      </p>
+      <div class="fg">
+        <label>Your raw GitHub URL (from github_setup.html guide)</label>
+        <input type="text" id="gh-url-input" placeholder="https://raw.githubusercontent.com/your-name/tuition-quiz-questions/main/questions.json"
+               value="" oninput="validateGhUrl()">
+      </div>
+      <div style="background:rgba(61,220,176,0.07);border:1.5px solid rgba(61,220,176,0.2);border-radius:10px;padding:12px 14px;margin:12px 0;font-size:0.82rem;line-height:1.7;">
+        <strong style="color:var(--a3);">How it works:</strong><br>
+        <span style="color:var(--mut);">1. You save questions here → they upload to GitHub<br>
+        2. Any device opens the quiz → fetches latest from GitHub<br>
+        3. Works on phone, tablet, laptop — all in sync</span>
+      </div>
+      <div style="background:rgba(255,107,138,0.08);border:1.5px solid rgba(255,107,138,0.2);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:0.8rem;color:var(--mut);">
+        ⚠️ <strong style="color:var(--txt);">GitHub API limit:</strong> Free GitHub allows 60 reads/hour and you need a Personal Access Token to write. 
+        <a href="github_setup.html" target="_blank" style="color:var(--a1);">See setup guide</a> for the token step.
+      </div>
+      <div class="fg">
+        <label>GitHub Personal Access Token (needed to save/upload)</label>
+        <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        <small style="color:var(--mut);font-size:0.72rem;margin-top:3px;display:block;">Stored only in this browser. Never shared. Needed to push changes to GitHub.</small>
+      </div>
+      <div class="fg">
+        <label>GitHub Username</label>
+        <input type="text" id="gh-user-input" placeholder="your-github-username">
+      </div>
+      <div class="fg">
+        <label>Repository Name</label>
+        <input type="text" id="gh-repo-input" placeholder="tuition-quiz-questions" value="tuition-quiz-questions">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <button class="btn btn-p" onclick="saveGitHubConfig()">💾 Save Config</button>
+        <button class="btn btn-g" onclick="testGitHubConnection()">🔗 Test Connection</button>
+        <button class="btn btn-ghost" onclick="openGitHubSetup()">📖 Setup Guide</button>
+      </div>
+      <div id="gh-status" style="margin-top:12px;display:none;padding:10px 14px;border-radius:9px;font-size:0.82rem;font-weight:700;"></div>
+    </div>
+  </div>
+
+  <!-- ══ STATS ══ -->
+  <div class="pane" id="pane-stats">
+    <div id="stats-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ADMIN PANEL — Fixed version
+// Key design:
+//   data[bank] = ORIGINAL questions (from embedded JS constants)
+//   localData[bank] = YOUR ADDED questions (from localStorage)
+//   Both sets show in Browse. Quiz shows both too.
+// ═══════════════════════════════════════════════════════════
+
+const ADMIN_PW = 'RAJSINGH123321';
+
+// ── Map admin bank names → the actual variable names in the quiz pages ──
+const BANK_VARS = {
+  gk:        'GK_QUESTION_BANK',   // index.html embeds this
+  grammar:   'GRAMMAR_QUESTION_BANK', // grammar.html embeds this
+  reasoning: 'REASONING_QUESTION_BANK', // reasoning.html embeds this
+  math:      'MATH_QUESTION_BANK'   // index.html embeds this
+};
+// The .js files also export these names (different from embedded):
+const JS_FILE_VARS = {
+  gk: 'GK_QUESTIONS', grammar: 'GRAMMAR_QUESTIONS',
+  reasoning: 'REASONING_QUESTIONS', math: 'MATH_QUESTIONS'
+};
+const BANK_LABELS = {gk:'GK', grammar:'Grammar', reasoning:'Reasoning', math:'Math'};
+const LVL_ICONS   = ['','🟢','🟡','🟠','🔴','🔥'];
+const LVL_NAMES   = ['','Easy','Normal','Hard','Difficult','Master'];
+
+// Original questions (from the .js files loaded in <head>)
+const origData = {gk:[], grammar:[], reasoning:[], math:[]};
+// Your added questions (localStorage)
+const localData = {gk:[], grammar:[], reasoning:[], math:[]};
+
+let filtered = [];
+let curPage  = 1;
+const PER_PAGE = 30;
+
+// ── Auth ─────────────────────────────────────────────────
+let loggedIn = sessionStorage.getItem('tq_admin') === '1';
+if (loggedIn) bootAdmin();
+
+function tryLogin() {
+  if (document.getElementById('pw').value === ADMIN_PW) {
+    sessionStorage.setItem('tq_admin','1');
+    bootAdmin();
+  } else {
+    const e = document.getElementById('login-err');
+    e.style.display = 'block';
+    setTimeout(() => e.style.display='none', 3000);
+  }
+}
+function logout() { sessionStorage.removeItem('tq_admin'); location.reload(); }
+
+function bootAdmin() {
+  document.getElementById('login').style.display  = 'none';
+  document.getElementById('shell').style.display = 'block';
+  loadData();
+}
+
+// ── Load data ─────────────────────────────────────────────
+function loadData() {
+  for (const bank of Object.keys(BANK_VARS)) {
+    // 1. Load original from .js file variable (loaded in <head>)
+    const jsVar  = JS_FILE_VARS[bank];
+    const raw    = window[jsVar];
+    if (raw && Array.isArray(raw)) {
+      origData[bank] = raw.map((q,i) => ({
+        ...q,
+        _id:     `orig_${bank}_${i}`,
+        _source: 'original'
+      }));
+    } else {
+      origData[bank] = [];
+    }
+
+    // 2. Load your added questions from localStorage
+    try {
+      const stored = localStorage.getItem('tq_admin_added_' + bank);
+      localData[bank] = stored ? JSON.parse(stored).map((q,i) => ({
+        ...q,
+        _id:     q._id || `local_${bank}_${Date.now()}_${i}`,
+        _source: 'local'
+      })) : [];
+    } catch(e) { localData[bank] = []; }
+  }
+
+  updateFilterCounts();
+  renderMiniStats();
+  renderList();
+  renderStats();
+}
+
+function saveLocalBank(bank) {
+  const toSave = localData[bank].map(({_id, _source, ...q}) => ({...q, _id}));
+  localStorage.setItem('tq_admin_added_' + bank, JSON.stringify(toSave));
+}
+
+function updateFilterCounts() {
+  const sel = document.getElementById('fil-bank');
+  const total = bank => origData[bank].length + localData[bank].length;
+  sel.options[1].text = `GK (${total('gk')})`;
+  sel.options[2].text = `Grammar (${total('grammar')})`;
+  sel.options[3].text = `Reasoning (${total('reasoning')})`;
+  sel.options[4].text = `Math (${total('math')})`;
+}
+
+// ── Render list ───────────────────────────────────────────
+function allQuestions() {
+  const all = [];
+  for (const bank of Object.keys(BANK_VARS)) {
+    origData[bank].forEach(q => all.push({q, bank}));
+    localData[bank].forEach(q => all.push({q, bank}));
+  }
+  return all;
+}
+
+function renderList() {
+  const search   = (document.getElementById('search').value || '').toLowerCase();
+  const bank     = document.getElementById('fil-bank').value;
+  const level    = document.getElementById('fil-level').value;
+  const src      = document.getElementById('fil-src').value;
+
+  filtered = allQuestions().filter(({q, bank: b}) => {
+    if (bank !== 'all' && bank !== b) return false;
+    if (level !== 'all' && String(q.level || 1) !== level) return false;
+    if (src === 'original' && q._source !== 'original') return false;
+    if (src === 'local'    && q._source !== 'local')    return false;
+    if (search) {
+      const hay = [q.question||'', q.display||'', q.answer||'',
+                   q.topic||'', ...(q.options||[]), q.explanation||'']
+                  .join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('view-count').textContent =
+    `${filtered.length} question${filtered.length !== 1 ? 's' : ''}`;
+  curPage = 1;
+  renderPage();
+  renderPgn();
+}
+
+function renderPage() {
+  const slice = filtered.slice((curPage-1)*PER_PAGE, curPage*PER_PAGE);
+  if (!slice.length) {
+    document.getElementById('q-list').innerHTML =
+      '<div class="empty-msg">🔍 No questions found.</div>';
+    return;
+  }
+  const startN = (curPage-1)*PER_PAGE;
+  document.getElementById('q-list').innerHTML = slice.map(({q, bank}, idx) => {
+    const n = startN + idx + 1;
+    const isLocal  = q._source === 'local';
+    const hasImg   = (q.answerImage?.trim()) || (q.explanationImage?.trim());
+    const qText    = esc(q.question || q.display || '');
+    const opts     = (q.options || []).map((o, oi) =>
+      `<div class="opt-row ${o===q.answer?'correct':''}">
+         <span class="opt-ltr">${'ABCD'[oi]}</span>${esc(o)}${o===q.answer?' ✅':''}
+       </div>`).join('');
+    const imgHtml  = q.explanationImage
+      ? `<div style="text-align:center;margin-top:8px;"><img src="${esc(q.explanationImage)}"
+           style="max-width:100%;max-height:160px;border-radius:9px;" onerror="this.style.display='none'"></div>`
+      : q.answerImage
+        ? `<div style="text-align:center;margin-top:8px;font-size:3rem;">${q.answerImage}</div>`
+        : '';
+
+    // Quiz status box
+    const statusBox = isLocal
+      ? `<div class="quiz-status-box local-only">
+           ⚡ <strong>Added by you</strong> — This question IS already showing in the quiz on this device.<br>
+           To make it permanent on all devices → <strong>Export All JSON</strong> and update your .js files.
+         </div>`
+      : `<div class="quiz-status-box in-quiz">
+           ✅ <strong>Live in quiz</strong> — This is an original question, shown to all students.
+         </div>`;
+
+    return `<div class="q-item ${isLocal?'local-q':''} ${!hasImg?'no-img':''}" id="qi-${q._id}">
+      <div class="q-head" onclick="toggleQ('${q._id}')">
+        <span class="q-num">#${n}</span>
+        <span class="q-txt">${qText}</span>
+        <div class="q-tags">
+          <span class="tag tag-bank">${BANK_LABELS[bank]}</span>
+          <span class="tag tag-topic">${esc(q.topic||'')}</span>
+          <span class="tag tag-lvl">L${q.level||1} ${LVL_ICONS[q.level||1]||''}</span>
+          ${isLocal
+            ? '<span class="tag tag-local">⚡ Added by you</span>'
+            : '<span class="tag tag-inquiz">✅ In Quiz</span>'}
+          ${!hasImg ? '<span class="tag tag-noimg">⚠️ No image</span>' : ''}
+        </div>
+        <div class="q-acts">
+          <button class="btn btn-y btn-sm"
+            onclick="event.stopPropagation();editQ('${q._id}','${bank}')">✏️</button>
+          <button class="btn btn-r btn-sm"
+            onclick="event.stopPropagation();deleteQ('${q._id}','${bank}')">🗑️</button>
+        </div>
+      </div>
+      <div class="q-body" id="qb-${q._id}">
+        <div class="opts-grid">${opts}</div>
+        ${q.explanation ? `<div class="exp-box">💡 ${esc(q.explanation)}</div>` : ''}
+        ${q.hint ? `<div style="margin-top:6px;font-size:0.76rem;color:var(--mut);">🔖 Hint: ${esc(q.hint)}</div>` : ''}
+        ${imgHtml}
+        ${statusBox}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPgn() {
+  const total = Math.ceil(filtered.length / PER_PAGE);
+  document.getElementById('pgn').innerHTML = total <= 1 ? '' :
+    Array.from({length:total},(_,i)=>
+      `<button class="pgn-btn ${i+1===curPage?'active':''}" onclick="goPage(${i+1})">${i+1}</button>`
+    ).join('');
+}
+
+function goPage(p) { curPage=p; renderPage(); renderPgn(); window.scrollTo(0,120); }
+function toggleQ(id) { document.getElementById('qb-'+id)?.classList.toggle('open'); }
+
+// ── Mini stats ────────────────────────────────────────────
+function renderMiniStats() {
+  const totals = {};
+  let grand=0, local=0, noImg=0;
+  for (const b of Object.keys(BANK_VARS)) {
+    totals[b] = origData[b].length + localData[b].length;
+    grand += totals[b];
+    local += localData[b].length;
+    noImg += [...origData[b],...localData[b]].filter(
+      q => !q.answerImage?.trim() && !q.explanationImage?.trim()).length;
+  }
+  document.getElementById('mini-stats').innerHTML = `
+    <div class="stat-box"><div class="val" style="color:var(--a1);">${grand}</div><div class="lbl">Total Questions</div></div>
+    <div class="stat-box"><div class="val" style="color:var(--a2);">${totals.gk}</div><div class="lbl">GK</div></div>
+    <div class="stat-box"><div class="val" style="color:var(--a4);">${totals.grammar}</div><div class="lbl">Grammar</div></div>
+    <div class="stat-box"><div class="val" style="color:var(--a3);">${totals.reasoning}</div><div class="lbl">Reasoning</div></div>
+    <div class="stat-box"><div class="val" style="color:var(--a3);">${totals.math}</div><div class="lbl">Math</div></div>
+    <div class="stat-box"><div class="val" style="color:var(--a2);">${local}</div><div class="lbl">Added by You</div></div>
+    <div class="stat-box"><div class="val" style="color:var(--err);">${noImg}</div><div class="lbl">No Image</div></div>`;
+}
+
+// ── Stats tab ─────────────────────────────────────────────
+function renderStats() {
+  const html = Object.keys(BANK_VARS).map(b => {
+    const all = [...origData[b], ...localData[b]];
+    if (!all.length) return '';
+    const byLvl = {};
+    all.forEach(q => { const l=q.level||1; byLvl[l]=(byLvl[l]||0)+1; });
+    const bars = Object.entries(byLvl).sort((a,b)=>+a[0]-+b[0]).map(([l,n]) =>
+      `<div class="bar-row">
+         <span class="bar-lbl">L${l} ${LVL_NAMES[l]||''}</span>
+         <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/all.length*100)}%"></div></div>
+         <span class="bar-val">${n}</span>
+       </div>`).join('');
+    return `<div class="stats-section">
+      <h3>${BANK_LABELS[b]} — ${all.length} questions (${localData[b].length} added by you)</h3>
+      ${bars}
+    </div>`;
+  }).join('');
+  document.getElementById('stats-content').innerHTML = html;
+}
+
+// ── Image handling ────────────────────────────────────────
+function handleImgUpload(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    document.getElementById('f-img-data').value = e.target.result;
+    const p = document.getElementById('f-img-prev');
+    p.src = e.target.result; p.style.display='block';
+    document.getElementById('f-img-clear').style.display='inline-block';
+    document.getElementById('f-img-url').value='';
+  };
+  r.readAsDataURL(f);
+}
+function handleImgUrl(url) {
+  if (!url.trim()) return;
+  document.getElementById('f-img-data').value = url.trim();
+  const p = document.getElementById('f-img-prev');
+  p.src=url.trim(); p.style.display='block';
+  document.getElementById('f-img-clear').style.display='inline-block';
+}
+function clearImg() {
+  document.getElementById('f-img-data').value='';
+  document.getElementById('f-img-url').value='';
+  const p=document.getElementById('f-img-prev');
+  p.src=''; p.style.display='none';
+  document.getElementById('f-img-clear').style.display='none';
+  document.getElementById('f-img-file').value='';
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('f-emoji').addEventListener('input',function(){
+    document.getElementById('f-emoji-prev').textContent=this.value;
+  });
+});
+
+// ── Form ──────────────────────────────────────────────────
+function setLvl(n) {
+  document.getElementById('f-level-val').value=n;
+  for(let i=1;i<=5;i++)
+    document.getElementById('lb'+i).classList.toggle('active',i===n);
+}
+
+function saveQ() {
+  const bank  = document.getElementById('f-bank').value;
+  const topic = document.getElementById('f-topic').value.trim();
+  const q     = document.getElementById('f-q').value.trim();
+  const opts  = [0,1,2,3].map(i=>document.getElementById('f-o'+i).value.trim());
+  const corIdx = [...document.querySelectorAll('[name=cor]')].findIndex(r=>r.checked);
+  const exp   = document.getElementById('f-exp').value.trim();
+  const emoji = document.getElementById('f-emoji').value.trim();
+  const img   = document.getElementById('f-img-data').value.trim();
+  const hint  = document.getElementById('f-hint').value.trim();
+  const extra = document.getElementById('f-extra').value.trim();
+  const lvl   = parseInt(document.getElementById('f-level-val').value)||1;
+  const warn  = document.getElementById('form-warn');
+
+  if (!q)                    { showWarn('⚠️ Question text is required.');          return; }
+  if (opts.some(o=>!o))      { showWarn('⚠️ All 4 options must be filled.');       return; }
+  if (corIdx < 0)            { showWarn('⚠️ Please mark the correct answer ✅');   return; }
+  warn.style.display='none';
+
+  const editId = document.getElementById('edit-id').value;
+  const newQ = {
+    topic: topic||'General', question: q, options: opts,
+    answer: opts[corIdx], explanation: exp, level: lvl,
+    answerImage: emoji, explanationImage: img,
+    optionImages: ['','','',''], hint,
+    silentLetterInfo: bank==='grammar'?extra:'',
+    trick: bank==='reasoning'?extra:'',
+    _source: 'local',
+    _id: editId || ('local_'+bank+'_'+Date.now())
+  };
+
+  if (editId) {
+    // Update — could be in either origData or localData
+    const editBk = document.getElementById('edit-bank').value;
+    const li = localData[editBk].findIndex(x=>x._id===editId);
+    if (li >= 0) { localData[editBk][li] = newQ; }
+    else { localData[editBk].push(newQ); } // was original → add local version
+    saveLocalBank(editBk);
+    toast('✅ Question updated!');
+  } else {
+    localData[bank].push(newQ);
+    saveLocalBank(bank);
+    toast(`✅ Saved! Open the quiz now — your question is already there. No export needed!`);
+  }
+
+  updateFilterCounts();
+  renderMiniStats(); renderList(); renderStats();
+  clearForm(); switchTab('browse');
+}
+
+function editQ(id, bank) {
+  // Find in either source
+  const q = [...origData[bank], ...localData[bank]].find(x=>x._id===id);
+  if (!q) return;
+  switchTab('add');
+  document.getElementById('f-bank').value = bank;
+  document.getElementById('f-topic').value = q.topic||'';
+  document.getElementById('f-q').value = q.question||q.display||'';
+  (q.options||[]).forEach((o,i)=>document.getElementById('f-o'+i).value=o);
+  const ci=(q.options||[]).indexOf(q.answer);
+  if(ci>=0) document.querySelectorAll('[name=cor]')[ci].checked=true;
+  document.getElementById('f-exp').value=q.explanation||'';
+  document.getElementById('f-emoji').value=q.answerImage||'';
+  document.getElementById('f-emoji-prev').textContent=q.answerImage||'';
+  document.getElementById('f-hint').value=q.hint||'';
+  document.getElementById('f-extra').value=q.silentLetterInfo||q.trick||'';
+  setLvl(q.level||1);
+  document.getElementById('edit-id').value=id;
+  document.getElementById('edit-bank').value=bank;
+  document.getElementById('form-title').textContent='✏️ Editing Question';
+  document.getElementById('cancel-btn').style.display='inline-block';
+  if (q.explanationImage) {
+    document.getElementById('f-img-data').value=q.explanationImage;
+    const p=document.getElementById('f-img-prev');
+    p.src=q.explanationImage; p.style.display='block';
+    document.getElementById('f-img-clear').style.display='inline-block';
+  }
+  window.scrollTo(0,0);
+}
+
+function deleteQ(id, bank) {
+  if (!confirm('Delete this question?')) return;
+  // Can only delete local questions; original ones are read-only
+  const li = localData[bank].findIndex(x=>x._id===id);
+  if (li >= 0) {
+    localData[bank].splice(li,1);
+    saveLocalBank(bank);
+    toast('🗑️ Deleted.');
+  } else {
+    toast('ℹ️ Original questions can\'t be deleted here. Edit the .js file to remove permanently.');
+    return;
+  }
+  updateFilterCounts();
+  renderMiniStats(); renderList(); renderStats();
+}
+
+function clearForm() {
+  ['f-topic','f-q','f-o0','f-o1','f-o2','f-o3',
+   'f-exp','f-emoji','f-hint','f-extra'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.querySelectorAll('[name=cor]').forEach(r=>r.checked=false);
+  setLvl(1); clearImg();
+  document.getElementById('f-emoji-prev').textContent='';
+  document.getElementById('edit-id').value='';
+  document.getElementById('edit-bank').value='';
+  document.getElementById('form-title').textContent='➕ Add New Question';
+  document.getElementById('cancel-btn').style.display='none';
+  document.getElementById('form-warn').style.display='none';
+}
+
+function cancelEdit() { clearForm(); switchTab('browse'); }
+
+function showWarn(msg) {
+  const w=document.getElementById('form-warn');
+  w.textContent=msg; w.style.display='block';
+  setTimeout(()=>w.style.display='none',4000);
+}
+
+// ── Export / Import ───────────────────────────────────────
+function exportJSON() {
+  // Export EVERYTHING: original + local together, per bank
+  const out = {};
+  for (const b of Object.keys(BANK_VARS)) {
+    out[b] = [...origData[b], ...localData[b]].map(({_id,_source,...q})=>q);
+  }
+  const blob = new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'TuitionQuiz_questions_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  toast('⬇️ Exported! To make permanent: replace the .js files with this data.');
+}
+
+function importJSON(inp) {
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try {
+      const parsed=JSON.parse(e.target.result);
+      let count=0;
+      if (typeof parsed==='object' && !Array.isArray(parsed)) {
+        for(const [b,qs] of Object.entries(parsed)){
+          if(localData[b] && Array.isArray(qs)){
+            localData[b]=[...localData[b],...qs.map((q,i)=>({
+              ...q, _id:`local_${b}_imp_${Date.now()}_${i}`, _source:'local'
+            }))];
+            saveLocalBank(b); count+=qs.length;
+          }
+        }
+      } else if(Array.isArray(parsed)){
+        const bk=prompt('Which bank? (gk/grammar/reasoning/math)','gk');
+        if(bk&&localData[bk]){
+          localData[bk]=[...localData[bk],...parsed.map((q,i)=>({
+            ...q, _id:`local_${bk}_imp_${Date.now()}_${i}`, _source:'local'
+          }))];
+          saveLocalBank(bk); count=parsed.length;
+        }
+      }
+      updateFilterCounts(); renderMiniStats(); renderList(); renderStats();
+      toast(`⬆️ Imported ${count} questions!`);
+    } catch(err){ toast('❌ Import failed: '+err.message); }
+  };
+  r.readAsText(f);
+  inp.value='';
+}
+
+// ── Tabs ──────────────────────────────────────────────────
+function switchTab(t) {
+  ['browse','add','stats','github'].forEach(p=>{
+    document.getElementById('pane-'+p).classList.toggle('active',p===t);
+    document.getElementById('tab-'+p).classList.toggle('active',p===t);
+  });
+  if (t === 'github') loadGitHubConfig();
+}
+
+// ── Utils ─────────────────────────────────────────────────
+function esc(s){
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── GitHub Integration ─────────────────────────────────────────────
+function loadGitHubConfig() {
+  const cfg = JSON.parse(localStorage.getItem('tq_gh_config') || '{}');
+  if (cfg.url)   document.getElementById('gh-url-input').value  = cfg.url;
+  if (cfg.token) document.getElementById('gh-token-input').value = cfg.token;
+  if (cfg.user)  document.getElementById('gh-user-input').value  = cfg.user;
+  if (cfg.repo)  document.getElementById('gh-repo-input').value  = cfg.repo || 'tuition-quiz-questions';
+}
+
+function saveGitHubConfig() {
+  const cfg = {
+    url:   document.getElementById('gh-url-input').value.trim(),
+    token: document.getElementById('gh-token-input').value.trim(),
+    user:  document.getElementById('gh-user-input').value.trim(),
+    repo:  document.getElementById('gh-repo-input').value.trim(),
+  };
+  localStorage.setItem('tq_gh_config', JSON.stringify(cfg));
+  showGhStatus('✅ Config saved! Now click "Save to GitHub" to upload your questions.', 'ok');
+}
+
+function openGitHubSetup() { window.open('github_setup.html', '_blank'); }
+
+function validateGhUrl() {
+  const url = document.getElementById('gh-url-input').value.trim();
+  // no-op visual feedback handled by button states
+}
+
+async function testGitHubConnection() {
+  const cfg = JSON.parse(localStorage.getItem('tq_gh_config') || '{}');
+  if (!cfg.url) { showGhStatus('⚠️ Save your config first.', 'warn'); return; }
+  showGhStatus('⏳ Testing connection...', 'info');
+  try {
+    const r = await fetch(cfg.url + '?t=' + Date.now());
+    if (r.ok) {
+      const data = await r.json();
+      const total = Object.values(data).reduce((s,a)=>s+(Array.isArray(a)?a.length:0),0);
+      showGhStatus('✅ Connected! Found ' + total + ' questions on GitHub.', 'ok');
+    } else {
+      showGhStatus('❌ Could not reach GitHub URL. Check the URL is correct and the file exists.', 'err');
+    }
+  } catch(e) { showGhStatus('❌ Error: ' + e.message, 'err'); }
+}
+
+async function saveToGitHub() {
+  const cfg = JSON.parse(localStorage.getItem('tq_gh_config') || '{}');
+  if (!cfg.token || !cfg.user || !cfg.repo) {
+    switchTab('github');
+    showGhStatus('⚠️ Please fill in your GitHub details in the GitHub tab first.', 'warn');
+    return;
+  }
+
+  const btn = document.getElementById('gh-save-btn');
+  btn.textContent = '⏳ Saving...';
+  btn.disabled = true;
+
+  // Build the questions object (original + local additions)
+  const allBanks = {};
+  for (const bank of Object.keys(BANK_VARS)) {
+    allBanks[bank] = [...origData[bank], ...localData[bank]]
+      .map(({_id, _source, ...q}) => q);
+  }
+
+  const content = JSON.stringify(allBanks, null, 2);
+  const encoded = btoa(unescape(encodeURIComponent(content))); // base64
+
+  try {
+    // Get current file SHA (needed for update)
+    const apiBase = 'https://api.github.com/repos/' + cfg.user + '/' + cfg.repo;
+    const headers = {
+      'Authorization': 'Bearer ' + cfg.token,
+      'Content-Type':  'application/json',
+      'Accept':        'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+
+    // Check if file exists to get SHA
+    let sha = '';
+    try {
+      const existing = await fetch(apiBase + '/contents/questions.json', {headers});
+      if (existing.ok) {
+        const exData = await existing.json();
+        sha = exData.sha || '';
+      }
+    } catch(e) {}
+
+    // Push the file
+    const body = {
+      message: 'Update questions via Tuition Quiz Admin — ' + new Date().toLocaleString(),
+      content: encoded,
+    };
+    if (sha) body.sha = sha; // required for updates
+
+    const resp = await fetch(apiBase + '/contents/questions.json', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (resp.ok) {
+      toast('✅ Saved to GitHub! All devices will get new questions within seconds.');
+      btn.textContent = '✅ Saved!';
+      setTimeout(() => { btn.textContent = '🐙 Save to GitHub'; btn.disabled = false; }, 3000);
+    } else {
+      const err = await resp.json();
+      throw new Error(err.message || resp.status);
+    }
+  } catch(e) {
+    toast('❌ GitHub save failed: ' + e.message);
+    btn.textContent = '🐙 Save to GitHub';
+    btn.disabled = false;
+    switchTab('github');
+    showGhStatus('❌ Failed: ' + e.message + '\nCheck your token has repo write permission.', 'err');
+  }
+}
+
+function showGhStatus(msg, type) {
+  const el = document.getElementById('gh-status');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = msg;
+  const styles = {
+    ok:   'background:rgba(61,220,176,0.1);border:1.5px solid rgba(61,220,176,0.35);color:var(--a3);',
+    warn: 'background:rgba(247,201,72,0.1);border:1.5px solid rgba(247,201,72,0.35);color:var(--a2);',
+    err:  'background:rgba(255,107,138,0.1);border:1.5px solid rgba(255,107,138,0.35);color:var(--err);',
+    info: 'background:rgba(124,92,252,0.1);border:1.5px solid rgba(124,92,252,0.35);color:var(--a1);',
+  };
+  el.style.cssText = (styles[type] || styles.info) + 'padding:10px 14px;border-radius:9px;font-size:0.82px;font-weight:700;white-space:pre-line;';
+}
+</script>
+</body>
+</html>
